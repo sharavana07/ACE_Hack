@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based CADcom</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #4895ef;
+            --primary-dark: #3a0ca3;
+            --secondary-color: #f1f5f9;
+            --accent-color: #7209b7;
+            --text-color: #1e293b;
+            --light-text: #64748b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+    
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: 0;
+            margin: 0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+            pointer-events: none;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin: 0;
+            font-weight: 700;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .card-header {
+            background-color: var(--card-bg);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+        
+        .card-header-icon {
+            margin-right: 0.75rem;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            margin: 0;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 1.75rem;
+        }
+        
+        .upload-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-box {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .dropzone {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-color: var(--secondary-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        .dropzone-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+        
+        .dropzone:hover .dropzone-icon {
+            transform: scale(1.1);
+        }
+        
+        .dropzone p {
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+        
+        .dropzone .small {
+            font-size: 0.85rem;
+            color: var(--light-text);
+        }
+        
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-info {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: var(--secondary-color);
+            border-radius: 8px;
+            display: none;
+            font-size: 0.9rem;
+            border-left: 3px solid var(--primary-color);
+        }
+        
+        .file-info.visible {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .comparison-options {
+            margin: 2rem 0 1rem;
+            text-align: center;
+        }
+        
+        .action-button {
+            background: linear-gradient(to right, var(--primary-color), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 0.85rem 2rem;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .action-button:active {
+            transform: translateY(1px);
+        }
+        
+        .action-button:disabled {
+            background: linear-gradient(to right, #cbd5e1, #e2e8f0);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .action-button-secondary {
+            background: white;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            box-shadow: none;
+        }
+        
+        .action-button-secondary:hover {
+            background-color: var(--secondary-color);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .comparison-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 1.5rem 0;
+        }
+        
+        .viewer-box {
+            flex: 1;
+            min-width: 280px;
+        }
+        
+        .viewer-title {
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .viewer-title-icon {
+            color: var(--primary-color);
+        }
+        
+        .viewer {
+            height: 300px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            background-color: white;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .viewer:hover {
+            border-color: var(--primary-light);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .viewer img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .viewer p {
+            padding: 1rem;
+            text-align: center;
+            color: var(--light-text);
+        }
+        
+        .report-section {
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .report-section.visible {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loader {
+            border: 4px solid rgba(67, 97, 238, 0.1);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+            display: none;
+        }
+        
+        .loader.visible {
+            display: block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .summary-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin: 1.5rem 0 2rem;
+        }
+        
+        .stat-box {
+            flex: 1;
+            min-width: 160px;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-icon {
+            font-size: 1.75rem;
+            margin-bottom: 0.75rem;
+            color: var(--primary-color);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+            font-weight: 500;
+        }
+        
+        #similarityValue {
+            color: var(--success-color);
+        }
+        
+        #differencesCount {
+            color: var(--warning-color);
+        }
+        
+        #highSeverityCount {
+            color: var(--danger-color);
+        }
+        
+        .diff-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .diff-table th, .diff-table td {
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            text-align: left;
+        }
+        
+        .diff-table th {
+            background-color: var(--secondary-color);
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .diff-table th:first-child {
+            border-top-left-radius: 8px;
+        }
+        
+        .diff-table th:last-child {
+            border-top-right-radius: 8px;
+        }
+        
+        .diff-table tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+        }
+        
+        .diff-table tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
+        }
+        
+        .diff-table tr:hover td {
+            background-color: rgba(241, 245, 249, 0.5);
+        }
+        
+        .diff-severity-high {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--danger-color) !important;
+        }
+        
+        .diff-severity-medium {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--warning-color) !important;
+        }
+        
+        .diff-severity-low {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid var(--success-color) !important;
+        }
+        
+        .buttons-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 2rem;
+            justify-content: center;
+        }
+        
+        h3 {
+            color: var(--primary-dark);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .upload-section, .comparison-section {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .buttons-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .action-button {
+                width: 100%;
+            }
+            
+            .stat-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AI-Based CAD comp</h1>
+    </div>
+
+    <div class="container">
+        <!-- File Upload Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">📤</div>
+                <h2 class="card-title">Upload CAD Files</h2>
+            </div>
+            <div class="card-body">
+                <div class="upload-section">
+                    <div class="upload-box">
+                        <div class="dropzone" id="dropzone1">
+                            <div class="dropzone-icon">📁</div>
+                            <p>Drag & drop or click to upload CAD File 1</p>
+                            <p class="small">Supported formats: .STEP, .STL, .IGES</p>
+                            <input type="file" class="file-input" id="file1" accept=".step,.stl,.iges">
+                        </div>
+                        <div class="file-info" id="fileInfo1"><strong>File:</strong> <span id="fileName1">None</span></div>
+                    </div>
+                    
+                    <div class="upload-box">
+                        <div class="dropzone" id="dropzone2">
+                            <div class="dropzone-icon">📁</div>
+                            <p>Drag & drop or click to upload CAD File 2</p>
+                            <p class="small">Supported formats: .STEP, .STL, .IGES</p>
+                            <input type="file" class="file-input" id="file2" accept=".step,.stl,.iges">
+                        </div>
+                        <div class="file-info" id="fileInfo2"><strong>File:</strong> <span id="fileName2">None</span></div>
+                    </div>
+                </div>
+                
+                <div class="comparison-options">
+                    <button class="action-button" id="compareButton" disabled>
+                        <span>Compare Files</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Viewer Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon">👁️</div>
+                <h2 class="card-title">CAD Previews</h2>
+            </div>
+            <div class="card-body">
+                <div class="comparison-section">
+                    <div class="viewer-box">
+                        <div class="viewer-title">
+                            <span class="viewer-title-icon">📄</span>
+                            File 1 Preview
+                        </div>
+                        <div class="viewer" id="viewer1">
+                            <p>No file uploaded</p>
+                        </div>
+                    </div>
+                    
+                    <div class="viewer-box">
+                        <div class="viewer-title">
+                            <span class="viewer-title-icon">📄</span>
+                            File 2 Preview
+                        </div>
+                        <div class="viewer" id="viewer2">
+                            <p>No file uploaded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Report Section -->
+        <div class="card report-section" id="reportCard">
+            <div class="card-header">
+                <div class="card-header-icon">🤖</div>
+                <h2 class="card-title">AI Analysis Report</h2>
+            </div>
+            <div class="card-body">
+                <div class="loader" id="analysisLoader"></div>
+                
+                <div id="reportContent">
+                    <div class="summary-stats">
+                        <div class="stat-box">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-value" id="similarityValue">--</div>
+                            <div class="stat-label">Similarity Score</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">🔍</div>
+                            <div class="stat-value" id="differencesCount">--</div>
+                            <div class="stat-label">Differences Found</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-value" id="highSeverityCount">--</div>
+                            <div class="stat-label">Critical Issues</div>
+                        </div>
+                    </div>
+                    <h3>Detailed Analysis</h3>
+                    <div id="reportDetails">AI analysis will appear here...</div>
+                </div>
+                
+                <div class="buttons-row">
+                    <button class="action-button" id="downloadBtn">
+                        <span>Download Report</span>
+                    </button>
+                    <button class="action-button action-button-secondary" id="newComparisonBtn">
+                        <span>New Comparison</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropzone1 = document.getElementById('dropzone1');
+            const dropzone2 = document.getElementById('dropzone2');
+            const fileInput1 = document.getElementById('file1');
+            const fileInput2 = document.getElementById('file2');
+            const fileInfo1 = document.getElementById('fileInfo1');
+            const fileInfo2 = document.getElementById('fileInfo2');
+            const fileName1 = document.getElementById('fileName1');
+            const fileName2 = document.getElementById('fileName2');
+            const compareButton = document.getElementById('compareButton');
+            const viewer1 = document.getElementById('viewer1');
+            const viewer2 = document.getElementById('viewer2');
+            const reportCard = document.getElementById('reportCard');
+            const analysisLoader = document.getElementById('analysisLoader');
+            const similarityValue = document.getElementById('similarityValue');
+            const differencesCount = document.getElementById('differencesCount');
+            const highSeverityCount = document.getElementById('highSeverityCount');
+            const reportDetails = document.getElementById('reportDetails');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const newComparisonBtn = document.getElementById('newComparisonBtn');
+            
+            // Event listeners for dropzone
+            function setupDropzone(dropzone, fileInput) {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, preventDefaults, false);
+                });
+                
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, () => {
+                        dropzone.classList.add('dragover');
+                    }, false);
+                });
+                
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropzone.addEventListener(eventName, () => {
+                        dropzone.classList.remove('dragover');
+                    }, false);
+                });
+                
+                dropzone.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    fileInput.files = dt.files;
+                    
+                    // Trigger change event
+                    const event = new Event('change');
+                    fileInput.dispatchEvent(event);
+                }, false);
+            }
+            
+            setupDropzone(dropzone1, fileInput1);
+            setupDropzone(dropzone2, fileInput2);
+            
+            // File input change handlers
+            fileInput1.addEventListener('change', () => {
+                updateFileInfo(fileInput1, fileName1, fileInfo1, viewer1);
+                checkEnableCompare();
+            });
+            
+            fileInput2.addEventListener('change', () => {
+                updateFileInfo(fileInput2, fileName2, fileInfo2, viewer2);
+                checkEnableCompare();
+            });
+            
+            function updateFileInfo(fileInput, fileNameElement, fileInfoElement, viewerElement) {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    fileNameElement.textContent = file.name;
+                    fileInfoElement.classList.add('visible');
+                    
+                    // Update viewer with file name
+                    viewerElement.innerHTML = `<p>${file.name}</p>`;
+                    
+                    // If it's an STL file, we could potentially add a preview
+                    // but that would require Three.js integration
+                }
+            }
+            
+            function checkEnableCompare() {
+                if (fileInput1.files && fileInput1.files[0] && fileInput2.files && fileInput2.files[0]) {
+                    compareButton.removeAttribute('disabled');
+                } else {
+                    compareButton.setAttribute('disabled', 'disabled');
+                }
+            }
+            
+            // Compare button click handler
+            compareButton.addEventListener('click', compareFiles);
+            
+            function compareFiles() {
+                // Show report section and loader
+                reportCard.style.display = 'block';
+                analysisLoader.style.display = 'block';
+                
+                // Hide report content while loading
+                document.getElementById('reportContent').style.display = 'none';
+                
+                // Scroll to report section
+                reportCard.scrollIntoView({ behavior: 'smooth' });
+                
+                // In a real implementation, this would be a fetch to your backend
+                // For demo purposes, we'll use a timeout and mock data
+                setTimeout(() => {
+                    analysisLoader.style.display = 'none';
+                    document.getElementById('reportContent').style.display = 'block';
+                    displayMockResults();
+                }, 2000);
+            }
+            
+            function displayMockResults() {
+                // Mock similarity score (70-95%)
+                const similarity = Math.floor(Math.random() * 25) + 70;
+                
+                // Generate random differences (2-8)
+                const diffCount = Math.floor(Math.random() * 6) + 2;
+                
+                // Random high severity issues (0-3)
+                const highSeverity = Math.min(Math.floor(Math.random() * 4), diffCount);
+                
+                // Update summary stats
+                similarityValue.textContent = `${similarity}%`;
+                differencesCount.textContent = diffCount;
+                highSeverityCount.textContent = highSeverity;
+                
+                // Generate mock difference table
+                const differences = generateMockDifferences(diffCount, highSeverity);
+                
+                // Display the report details
+                reportDetails.innerHTML = generateReportHTML(differences);
+            }
+            
+            function generateMockDifferences(count, highCount) {
+                const differences = [];
+                const types = ['Dimension', 'Feature', 'Material', 'Fillet', 'Hole', 'Chamfer'];
+                const locations = ['Top face', 'Bottom face', 'Side wall', 'Main body', 'Flange', 'Edge B23'];
+                
+                // Create high severity differences
+                for (let i = 0; i < highCount; i++) {
+                    differences.push({
+                        type: types[Math.floor(Math.random() * types.length)],
+                        location: locations[Math.floor(Math.random() * locations.length)],
+                        file1Value: `Value ${(Math.random() * 20 + 10).toFixed(1)}mm`,
+                        file2Value: `Value ${(Math.random() * 20 + 10).toFixed(1)}mm`,
+                        severity: 'high'
+                    });
+                }
+                
+                // Create remaining differences
+                for (let i = highCount; i < count; i++) {
+                    differences.push({
+                        type: types[Math.floor(Math.random() * types.length)],
+                        location: locations[Math.floor(Math.random() * locations.length)],
+                        file1Value: `Value ${(Math.random() * 20 + 10).toFixed(1)}mm`,
+                        file2Value: `Value ${(Math.random() * 20 + 10).toFixed(1)}mm`,
+                        severity: Math.random() > 0.5 ? 'medium' : 'low'
+                    });
+                }
+                
+                return differences;
+            }
+            
+            function generateReportHTML(differences) {
+                return `
+                    <table class="diff-table">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>File 1</th>
+                                <th>File 2</th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${differences.map(diff => `
+                                <tr class="diff-severity-${diff.severity}">
+                                    <td>${diff.type}</td>
+                                    <td>${diff.location}</td>
+                                    <td>${diff.file1Value}</td>
+                                    <td>${diff.file2Value}</td>
+                                    <td style="text-transform: capitalize">${diff.severity}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+            
+            // Download button handler
+            downloadBtn.addEventListener('click', downloadReport);
+            
+            function downloadReport() {
+                // Create report content
+                const reportContent = `
+CAD Comparison Report
+Generated: ${new Date().toLocaleString()}
+
+Files Compared:
+- ${fileName1.textContent}
+- ${fileName2.textContent}
+
+Similarity Score: ${similarityValue.textContent}
+Total Differences: ${differencesCount.textContent}
+Critical Issues: ${highSeverityCount.textContent}
+
+Detailed Findings:
+${Array.from(document.querySelectorAll('.diff-table tbody tr')).map(row => {
+    const cells = row.querySelectorAll('td');
+    return `- ${cells[0].textContent} (${cells[1].textContent}): 
+  File 1: ${cells[2].textContent}
+  File 2: ${cells[3].textContent}
+  Severity: ${cells[4].textContent}`;
+}).join('\n\n')}
+                `;
+                
+                // Create and trigger download
+                const blob = new Blob([reportContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'CAD_Comparison_Report.txt';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+            
+            // New comparison button handler
+            newComparisonBtn.addEventListener('click', resetComparison);
+            
+            function resetComparison() {
+                // Reset file inputs
+                fileInput1.value = '';
+                fileInput2.value = '';
+                
+                // Reset file info displays
+                fileInfo1.classList.remove('visible');
+                fileInfo2.classList.remove('visible');
+                
+                // Reset viewers
+                viewer1.innerHTML = '<p>No file uploaded</p>';
+                viewer2.innerHTML = '<p>No file uploaded</p>';
+                
+                // Hide report section
+                reportCard.style.display = 'none';
+                
+                // Disable compare button
+                compareButton.setAttribute('disabled', 'disabled');
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
